@@ -4,12 +4,18 @@ import lombok.AllArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @AllArgsConstructor
 public class ProductRepository {
     private final JdbcClient jdbcClient;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static final RowMapper<Product> PRODUCT_ROW_MAPPER = (rs, _) -> {
         var product = new Product();
@@ -18,12 +24,22 @@ public class ProductRepository {
         product.setPrice(rs.getBigDecimal("price"));
         product.setCategory(rs.getString("category"));
         product.setImageUrl(rs.getString("image_url"));
+        try {
+            String json = rs.getString("details");
+            if (json != null) {
+                product.setDetails(objectMapper.readValue(json,
+                        new TypeReference<Map<String, Object>>() {}
+                ));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return product;
     };
 
     public List<Product> getAllProducts() {
         return jdbcClient
-                .sql("SELECT id, title, price, category, image_url FROM products")
+                .sql("SELECT id, title, price, category, image_url, details FROM products")
                 .query(PRODUCT_ROW_MAPPER)
                 .list();
 
@@ -31,7 +47,7 @@ public class ProductRepository {
 
     public Product findById(int id) {
         return jdbcClient
-                .sql("SELECT id, title, price, category, image_url FROM products WHERE id = :id")
+                .sql("SELECT id, title, price, category, image_url, details FROM products WHERE id = :id")
                 .param("id", id)
                 .query(PRODUCT_ROW_MAPPER)
                 .single();
