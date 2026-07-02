@@ -5,12 +5,14 @@ import net.hackyourfuture.hyfshop.product.dto.ProductResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
+    private final FileService fileService;
 
     public List<ProductResponse> getAllProducts() {
         return productRepository.getAllProducts().stream().map(ProductResponse::from).toList();
@@ -26,14 +28,22 @@ public class ProductService {
     }
 
     public ProductResponse setProductImage(int id, MultipartFile file) {
-        // TODO: Implement
-        // call ProductRepository.setImageUrl() afterwards with the new URL
-        throw new UnsupportedOperationException("Not implemented yet");
+        try {
+            String key = fileService.upload(file);
+            productRepository.setImageUrl(id, key);
+            return ProductResponse.from(productRepository.findById(id));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload product image", e);
+        }
     }
 
     public ProductResponse deleteProductImage(int id) {
-        // TODO: Implement
-        // call ProductRepository.setImageUrl() to set the image url to null
-        throw new UnsupportedOperationException("Not implemented yet");
+        Product product = productRepository.findById(id);
+        String key = product.getImageUrl();
+        if (key != null) {
+            fileService.delete(key);
+        }
+        productRepository.setImageUrl(id, null);
+        return ProductResponse.from(productRepository.findById(id));
     }
 }

@@ -1,10 +1,20 @@
 spring:
   application:
     name: hyf_shop
+
   datasource:
-    url: '${DB_URL}'
-    username: '${DB_USERNAME}'
-    password: '${DB_PASSWORD}'
-  driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+b2:
+  endpoint: ${B2_ENDPOINT}
+  region: ${B2_REGION}
+  bucket: ${B2_BUCKET_NAME}
+  access-key: ${B2_ACCESS_KEY}
+  secret-key: ${B2_SECRET_KEY}
+  public-url: https://f003.backblazeb2.com/file/${B2_BUCKET_NAME}
+
 server:
-  port: '8080'
+  port: 8080
