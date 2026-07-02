@@ -30,7 +30,8 @@ public class ProductRepository {
             String json = rs.getString("details");
             if (json != null) {
                 product.setDetails(objectMapper.readValue(json,
-                        new TypeReference<Map<String, Object>>() {}
+                        new TypeReference<Map<String, Object>>() {
+                        }
                 ));
             }
         } catch (Exception e) {
@@ -78,8 +79,14 @@ public class ProductRepository {
                 .list();
     }
 
-    public Product setSize(int id, String size) {
-        // TODO: Implement
-        throw new UnsupportedOperationException("Not implemented yet");
+    public void setSize(int id, String size) {
+        jdbcClient.sql("""
+                    UPDATE products
+                    SET details = jsonb_set(details, '{size}', to_jsonb(:size::text))
+                    WHERE id = :id
+                    """)
+                .param("id", id)
+                .param("size", size)
+                .update();
     }
 }
