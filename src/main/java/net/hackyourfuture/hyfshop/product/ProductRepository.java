@@ -11,6 +11,8 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.web.servlet.function.RequestPredicates.param;
+
 @Repository
 @AllArgsConstructor
 public class ProductRepository {
@@ -65,8 +67,15 @@ public class ProductRepository {
     }
 
     public List<Product> findByColor(String color) {
-        // TODO: Implement
-        throw new UnsupportedOperationException("Not implemented yet");
+        return jdbcClient.sql("""
+                        SELECT id, title, price, category, image_url, details
+                        FROM products
+                        WHERE details ->> 'color' = :color
+                        LIMIT 10
+                        """)
+                .param("color", color)
+                .query(PRODUCT_ROW_MAPPER)
+                .list();
     }
 
     public Product setSize(int id, String size) {
